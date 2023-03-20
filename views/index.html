@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form id="btn">
+      <input type="text" id="message" required />
+      <button>xabar</button>
+    </form>
+    <ul id="list"></ul>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      let name = localStorage.getItem("name");
+
+      if (!name) window.location = "/login";
+
+      const socket = io();
+      btn.onsubmit = (e) => {
+        e.preventDefault();
+        socket.emit("xabar", { name, message: message.value });
+        message.value = "";
+      };
+      socket.on("hello", (data) => {
+        localStorage.setItem("id", data.id);
+        let li = document.createElement("li");
+        li.textContent = data.name + " : " + data.message;
+        li.innerHTML = `
+        <span>${data.name} : </span>
+          <span>${data.message} : </span>
+          <span>${data.date}</span>
+        `;
+        let del = document.createElement("button");
+        del.textContent = "X";
+        del.setAttribute("name", data.id);
+        del.onclick = (e) => {
+          socket.emit("delete", {
+            id: del.getAttribute("name"),
+            socketId: socket.id,
+          });
+        };
+        li.append(del);
+        list.append(li);
+      });
+
+      socket.on("datas", (messages) => {
+        list.innerHTML = "";
+        for (let m of messages) {
+          let li = document.createElement("li");
+          li.innerHTML = `
+          <span>${m.name} : </span>
+            <span>${m.message} : </span>
+            <span>${m.date}</span>
+          `;
+          let del = document.createElement("button");
+          del.textContent = "X";
+          del.setAttribute("name", m.id);
+          del.onclick = (e) => {
+            socket.emit("delete", {
+              id: del.getAttribute("name"),
+              socketId: socket.id,
+            });
+          };
+          li.append(del);
+          list.append(li);
+        }
+      });
+    </script>
+  </body>
+</html>
